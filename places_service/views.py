@@ -1,6 +1,10 @@
 from django.core.exceptions import ValidationError
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParameter
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiExample,
+    OpenApiParameter,
+)
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 
@@ -40,11 +44,11 @@ class PlaceViewSet(viewsets.ModelViewSet):
                 value={
                     "name": "New Place",
                     "description": "A new place",
-                    "geom": "SRID=4326;POINT(15 15)"
+                    "geom": "SRID=4326;POINT(15 15)",
                 },
-                response_only=False
+                response_only=False,
             )
-        ]
+        ],
     )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
@@ -101,10 +105,7 @@ class PlaceViewSet(viewsets.ModelViewSet):
         examples=[
             OpenApiExample(
                 name="Find Closest Place",
-                value={
-                    "latitude": 5,
-                    "longitude": 5
-                },
+                value={"latitude": 5, "longitude": 5},
             )
         ],
     )

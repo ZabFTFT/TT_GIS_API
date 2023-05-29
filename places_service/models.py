@@ -11,4 +11,3 @@ class Place(models.Model):
 
     def __str__(self):
         return f"Name: {self.name}, Description: {self.description}, Coordinates: {self.geom}"
-

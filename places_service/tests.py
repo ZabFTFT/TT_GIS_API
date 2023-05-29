@@ -104,7 +104,9 @@ class PlaceViewSetTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_retrieve_place(self):
-        url = reverse("places_service:place-detail", kwargs={"pk": self.place1.pk})
+        url = reverse(
+            "places_service:place-detail", kwargs={"pk": self.place1.pk}
+        )
         response = self.client.get(url)
         serializer = PlaceSerializer(self.place1)
 
@@ -112,7 +114,9 @@ class PlaceViewSetTest(APITestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_update_place(self):
-        url = reverse("places_service:place-detail", kwargs={"pk": self.place1.pk})
+        url = reverse(
+            "places_service:place-detail", kwargs={"pk": self.place1.pk}
+        )
         data = {
             "name": "Updated Place",
             "description": "An updated place",
@@ -128,7 +132,9 @@ class PlaceViewSetTest(APITestCase):
         self.assertEqual(place.description, "An updated place")
 
     def test_partial_update_place(self):
-        url = reverse("places_service:place-detail", kwargs={"pk": self.place1.pk})
+        url = reverse(
+            "places_service:place-detail", kwargs={"pk": self.place1.pk}
+        )
         data = {"description": "An updated description"}
         response = self.client.patch(url, data)
         place = Place.objects.get(pk=self.place1.pk)
@@ -137,7 +143,9 @@ class PlaceViewSetTest(APITestCase):
         self.assertEqual(place.description, "An updated description")
 
     def test_delete_place(self):
-        url = reverse("places_service:place-detail", kwargs={"pk": self.place1.pk})
+        url = reverse(
+            "places_service:place-detail", kwargs={"pk": self.place1.pk}
+        )
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Place.objects.filter(pk=self.place1.pk).exists())
