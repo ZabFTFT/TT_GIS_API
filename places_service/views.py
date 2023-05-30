@@ -5,7 +5,7 @@ from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiParameter,
 )
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.pagination import PageNumberPagination
 
 from django.contrib.gis.geos import Point
@@ -126,4 +126,4 @@ class PlaceViewSet(viewsets.ModelViewSet):
         )
 
         serializer = self.get_serializer(closest_place)
-        return Response(serializer.data)
+        return Response(serializer.data, status.HTTP_200_OK)
