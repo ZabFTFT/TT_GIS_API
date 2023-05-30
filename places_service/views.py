@@ -111,13 +111,10 @@ class PlaceViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=["get"])
     def closest_point(self, request):
-        latitude_str = request.query_params.get("latitude")
-        longitude_str = request.query_params.get("longitude")
-
         try:
-            latitude = float(latitude_str)
-            longitude = float(longitude_str)
-        except ValueError:
+            latitude = float(request.query_params.get("latitude"))
+            longitude = float(request.query_params.get("longitude"))
+        except (ValueError, TypeError):
             raise ValidationError("Invalid latitude or longitude values.")
 
         point = Point(longitude, latitude, srid=4326)
