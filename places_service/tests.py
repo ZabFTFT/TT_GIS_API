@@ -33,15 +33,16 @@ class PlaceModelTest(TestCase):
 
 
 class PlaceSerializerTest(TestCase):
-    def test_serializer_data(self):
-        place_data = {
+    def setUp(self):
+        self.place_data = {
             "id": 1,
             "name": "Test Place",
             "description": "A test place",
             "geom": Point(1, 2),
         }
 
-        serializer = PlaceSerializer(data=place_data)
+    def test_serializer_data(self):
+        serializer = PlaceSerializer(data=self.place_data)
         serializer.is_valid()
 
         self.assertTrue(serializer.is_valid())
@@ -59,13 +60,7 @@ class PlaceSerializerTest(TestCase):
         self.assertIn("geom", serializer.errors)
 
     def test_serializer_save(self):
-        valid_place_data = {
-            "name": "Test Place",
-            "description": "A test place",
-            "geom": Point(1, 2),
-        }
-
-        serializer = PlaceSerializer(data=valid_place_data)
+        serializer = PlaceSerializer(data=self.place_data)
         serializer.is_valid()
 
         self.assertTrue(serializer.is_valid())
@@ -79,7 +74,6 @@ class PlaceSerializerTest(TestCase):
 
 class PlaceViewSetTest(APITestCase):
     def setUp(self):
-        self.url = reverse("places_service:place-list")
         self.client = APIClient()
 
         self.place1 = Place.objects.create(
@@ -93,41 +87,39 @@ class PlaceViewSetTest(APITestCase):
             geom="SRID=4326;POINT(20 20)",
         )
 
+        self.list_url = reverse("places_service:place-list")
+        self.detail_url = reverse(
+            "places_service:place-detail", kwargs={"pk": self.place1.pk}
+        )
+
     def test_list_places(self):
-        response = self.client.get(self.url)
+        response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["results"]), 2)
 
     def test_create_place(self):
-        url = reverse("places_service:place-list")
         data = {
             "name": "New Place",
             "description": "A new place",
             "geom": "SRID=4326;POINT(15 15)",
         }
-        response = self.client.post(url, data)
+        response = self.client.post(self.list_url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_retrieve_place(self):
-        url = reverse(
-            "places_service:place-detail", kwargs={"pk": self.place1.pk}
-        )
-        response = self.client.get(url)
+        response = self.client.get(self.detail_url)
         serializer = PlaceSerializer(self.place1)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
 
     def test_update_place(self):
-        url = reverse(
-            "places_service:place-detail", kwargs={"pk": self.place1.pk}
-        )
         data = {
             "name": "Updated Place",
             "description": "An updated place",
             "geom": "SRID=4326;POINT(25 25)",
         }
-        response = self.client.put(url, data)
+        response = self.client.put(self.detail_url, data)
         place = Place.objects.get(pk=self.place1.pk)
         serializer = PlaceSerializer(place)
 
@@ -135,23 +127,18 @@ class PlaceViewSetTest(APITestCase):
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(place.name, "Updated Place")
         self.assertEqual(place.description, "An updated place")
+        self.assertEqual(place.geom, "SRID=4326;POINT(25 25)")
 
     def test_partial_update_place(self):
-        url = reverse(
-            "places_service:place-detail", kwargs={"pk": self.place1.pk}
-        )
         data = {"description": "An updated description"}
-        response = self.client.patch(url, data)
+        response = self.client.patch(self.detail_url, data)
         place = Place.objects.get(pk=self.place1.pk)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(place.description, "An updated description")
 
     def test_delete_place(self):
-        url = reverse(
-            "places_service:place-detail", kwargs={"pk": self.place1.pk}
-        )
-        response = self.client.delete(url)
+        response = self.client.delete(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Place.objects.filter(pk=self.place1.pk).exists())
 
@@ -169,9 +156,9 @@ class PlaceViewSetTest(APITestCase):
                 geom=Point(i, i),
             )
 
-        response = self.client.get(self.url)
+        response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["results"]), 5)
 
-        response = self.client.get(self.url + "?page=3&page_size=1001")
+        response = self.client.get(self.list_url + "?page=3&page_size=1001")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
