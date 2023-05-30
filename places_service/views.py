@@ -5,7 +5,7 @@ from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiParameter,
 )
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.pagination import PageNumberPagination
 
 from django.contrib.gis.geos import Point
@@ -111,13 +111,10 @@ class PlaceViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=["get"])
     def closest_point(self, request):
-        latitude_str = request.query_params.get("latitude")
-        longitude_str = request.query_params.get("longitude")
-
         try:
-            latitude = float(latitude_str)
-            longitude = float(longitude_str)
-        except ValueError:
+            latitude = float(request.query_params.get("latitude"))
+            longitude = float(request.query_params.get("longitude"))
+        except (ValueError, TypeError):
             raise ValidationError("Invalid latitude or longitude values.")
 
         point = Point(longitude, latitude, srid=4326)
@@ -129,4 +126,4 @@ class PlaceViewSet(viewsets.ModelViewSet):
         )
 
         serializer = self.get_serializer(closest_place)
-        return Response(serializer.data)
+        return Response(serializer.data, status.HTTP_200_OK)
