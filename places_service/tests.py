@@ -4,7 +4,7 @@ from django.contrib.gis.geos import Point
 
 
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIClient
 
 from places_service.models import Place
 from places_service.serializers import PlaceSerializer
@@ -55,8 +55,6 @@ class PlaceSerializerTest(TestCase):
         }
 
         serializer = PlaceSerializer(data=invalid_place_data)
-        serializer.is_valid()
-
         self.assertFalse(serializer.is_valid())
         self.assertIn("geom", serializer.errors)
 
@@ -81,6 +79,9 @@ class PlaceSerializerTest(TestCase):
 
 class PlaceViewSetTest(APITestCase):
     def setUp(self):
+        self.url = reverse("places_service:place-list")
+        self.client = APIClient()
+
         self.place1 = Place.objects.create(
             name="Place 1",
             description="Description 1",
@@ -92,6 +93,11 @@ class PlaceViewSetTest(APITestCase):
             geom="SRID=4326;POINT(20 20)",
         )
 
+    def test_list_places(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["results"]), 2)
+
     def test_create_place(self):
         url = reverse("places_service:place-list")
         data = {
@@ -100,7 +106,6 @@ class PlaceViewSetTest(APITestCase):
             "geom": "SRID=4326;POINT(15 15)",
         }
         response = self.client.post(url, data)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_retrieve_place(self):
@@ -154,5 +159,19 @@ class PlaceViewSetTest(APITestCase):
         url = reverse("places_service:place-closest-point")
         params = {"latitude": 5, "longitude": 5}
         response = self.client.get(url, params)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_pagination(self):
+        for i in range(10):
+            Place.objects.create(
+                name=f"Place {i}",
+                description=f"Description {i}",
+                geom=Point(i, i),
+            )
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["results"]), 5)
+
+        response = self.client.get(self.url + "?page=3&page_size=1001")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
