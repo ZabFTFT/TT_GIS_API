@@ -23,7 +23,7 @@ class PlacePagination(PageNumberPagination):
 
 
 class PlaceViewSet(viewsets.ModelViewSet):
-    queryset = Place.objects.all()
+    queryset = Place.objects.order_by("id")
     serializer_class = PlaceSerializer
     pagination_class = PlacePagination
 
