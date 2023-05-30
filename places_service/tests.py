@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.gis.geos import Point
@@ -144,9 +145,13 @@ class PlaceViewSetTest(APITestCase):
 
     def test_closest_point(self):
         url = reverse("places_service:place-closest-point")
-        params = {"latitude": 5, "longitude": 5}
-        response = self.client.get(url, params)
+        params_valid = {"latitude": 5, "longitude": 5}
+        params_invalid = {}
+        response = self.client.get(url, params_valid)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        with self.assertRaises(ValidationError, msg="Invalid latitude or longitude values."):
+            self.client.get(url, params_invalid)
 
     def test_pagination(self):
         for i in range(10):
